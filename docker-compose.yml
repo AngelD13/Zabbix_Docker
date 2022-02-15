@@ -1,0 +1,58 @@
+version: "3.5"
+
+services:
+
+#nginx service
+  websrver:
+    image: nginx:latest
+    container_name: webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 127.0.0.1:8000:80
+      - 127.0.0.1:443:443
+    volumes:
+      - ./app:/var/www/html
+      - ./configs/nginx:/etc/nginx/conf.d
+      - ./logs/nginx:/var/log/nginx
+    links:
+      - mysql-server
+
+#php
+  php-fpm:
+    build:
+      context: php-fpm
+    volumes:
+      - ./app:/var/www/html
+
+#MySQL service
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 127.0.0.1:3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: zabbix_my
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix
+    volumes:
+      - ./databases/mariadb:/var/lib/mysql
+
+#PHPmyAdmin panel
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+    - 127.0.0.1:8080:80
+    environment:
+      PMA_HOST: mariadb
+      PMA_USER: zabbix
+      PMA_PASSWORD: zabbix
+
+# #Docker Networks
+#   networks:
+#    default:
+#      external:
+#        name: php-app-network
